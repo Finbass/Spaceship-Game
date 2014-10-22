@@ -10,7 +10,7 @@ void LoadBmp( const char* fileName, D3DCOLOR* surface ) {
 	assert(signature[ 0 ] == 'B' && signature[ 1 ] == 'M');
 
 	BitmapFileHeader fileHeader;
-	fread( &fileHeader, sizeof( fileHeader ), 1, bmpFile);
+	fread( &fileHeader, sizeof( fileHeader ), 1, aaaabmpFile);
 
 	BitmapInfoHeader infoHeader;
 	fread( &infoHeader, sizeof( infoHeader ), 1, bmpFile);
