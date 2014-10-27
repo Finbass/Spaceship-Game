@@ -28,64 +28,94 @@
 
 using std::vector;
 
-/*#define LEFTBOUNDARY 5
-#define RIGHTBOUNDARY 1361
-#define UPPERBOUNDARY 5
-#define LOWERBOUNDARY 763*/
-
 #define ROTATIONAMOUNT 0.0001f
 #define PI 3.14159265
 
 #define SIZEOFENEMYSHIPFLEET 15
-#define SIZEOFINSECTFLEET 15
+#define SIZEOFINSECTFLEET 10
 
-#define PLAYERBULLETSPEED 10.0f
+//#define PLAYERBULLETSPEED 3.0f
+#define PLAYERBULLETSPEED 8.0f
 #define ENEMYBULLETSPEED 2.3f
 #define PLAYERMSSILESPEED 7
 
 #define PLAYERSHIPLIVES 20
 #define FRAMESPERFLASH 5
+//this or
+//#define SHIPFLASHCOLOR D3DCOLOR_XRGB(255, 200, 200)
+//this?
 #define SHIPFLASHCOLOR D3DCOLOR_XRGB(255, 0, 200)
+
+#define FRAMESPEREXPLOSION 5
 
 #define ENEMYDIMENSION 150
 #define PLAYERDIMENSION 250
 
 #define INSECTSCALE 0.5f
-#define ENEMYSHIPSCALE 0.7f
+#define ENEMYSHIPSCALE 0.8f
 //make it 2.0f just to prove the point about constants and how shit hardcoding is
 #define PLAYERSHIPSCALE 0.5f
 
+//keep this scale for player or something like it. Maybe 20 small explosions too
+//#define EXPLOSIONSCALE 20.0f
+#define EXPLOSIONSPEED 4
+#define EXPLOSIONDIMENSION 300
+
 const int AMOUNTOFVECTORS = 1;
 
-struct bullet 
-{
+//INHERITANCE.
+//make allthese inherit from object ahaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa just looks tight as fuck
+
+struct object {
 	float x, y;
+	int frame;
+	float rotation;
+};
+
+
+struct bullet : public object
+{	
 	int r,g,b; //keep these and draw multicoloured plasma at certain stages of the game or always
 	float vx, vy;
-	float rotation;  //maybe not needed just set once but then again maybe needed coz everything has to stay rotated
-	int frame;
 	int frameExposure;
 };
 
-struct missile
+struct missile : public object
 {
-	float x, y;
 	float vx, vy;
-	float rotation;  //maybe not needed just set once but then again maybe needed coz everything has to stay rotated
-	int frame;
 	int frameExposure;
 };
 
-struct Ship
+struct Ship : public object
 {
-	float x, y;
 	float vx, vy;
 	int lives;
-	float rotation;
 	bool ifHit;
 	short framesSinceHit;
+	float speed;
+	float acceleration;
+	bool lockedOnTo;
+	int frameExposure;
 	//D3DCOLOR color; Maybe doesnt have to be part of each ship for flash hit effect. But then again maybe it does.
 };
+
+struct PlayerShip : public Ship
+{
+	int shield;
+};
+
+struct explosion : public object
+{
+	int frameExposure;
+	int r, g, b;
+	float scale;
+};
+
+/*struct lockOnCandidate
+{
+	Ship ship;
+	int timer;
+};*/
 
 enum weaponChoice{
 	BULLET,
@@ -96,15 +126,10 @@ enum weaponChoice{
 class Game
 {
 public:
-	//ALL FUNCTIONS:
+	//ALL FUNCTIONS-------------------------------------------------------------------:
 	Game( HWND hWnd,const KeyboardServer& kServer,const MouseServer& mServer);
 	~Game();
 	void Go();
-	int LEFTBOUNDARY;
-	int RIGHTBOUNDARY;
-	int UPPERBOUNDARY;
-	int LOWERBOUNDARY;
-	bool murrayPlaying = false;
 private:
 	//DRAWING
 	void ComposeFrame();
@@ -118,21 +143,33 @@ private:
 	void bulletLogic();
 	void createBullet(bool ifPlayer);
 	void createMissile(bool ifPlayer);
+	void createExplosion(explosion& a, float x, float y, float rotation, float scale, int r, int g, int b);
+	void createLockOn();
 	void setUpShips();
 	void findRotation(int x1, int y1, int x2, int y2, float& rotation);
 private:
-	//ALL VARIABLES:
+	//ALL VARIABLES--------------------------------------------------------------------:
 	D3DGraphics gfx;
 	KeyboardClient kbd;
 	MouseClient mouse;
 	DSound audio;
 
+	Sound plasmaShot;
+
 	LPDIRECT3DTEXTURE9 playerShipTexture;
 	LPDIRECT3DTEXTURE9 enemyShipTexture;
 	LPDIRECT3DTEXTURE9 insectKamikazeTexture;
 
-	LPDIRECT3DTEXTURE9 plasmaBullet;
-	LPDIRECT3DTEXTURE9 testBallTexture;
+	LPDIRECT3DTEXTURE9 plasmaBulletTexture;
+	LPDIRECT3DTEXTURE9 missileTexture;
+
+	LPDIRECT3DTEXTURE9 missileIconTexture;
+	LPDIRECT3DTEXTURE9 bulletIconTexture;
+	LPDIRECT3DTEXTURE9 explosionTexture;
+
+	LPD3DXFONT fontArial24 = NULL;
+	LPD3DXFONT fontGaramond36 = NULL;
+	LPD3DXFONT fontTimesNewRoman40 = NULL;
 
 	weaponChoice weaponChoice;
 	float speed;	
@@ -142,9 +179,12 @@ private:
 	vector<Ship> insectKamikazeFleet;
 
 	vector<bullet> arrayOfVectors[AMOUNTOFVECTORS];
-	vector<missile> missileVector;
-
 	vector<bullet> enemyBulletVector;
+	
+	vector<missile> missileVector;
+	vector<Ship*> lockedOnVector;
+
+	vector<explosion> explosionVector;
 
 	//sprinkler
 	float xVel, yVel;
@@ -152,10 +192,13 @@ private:
 	bool clockwise;
 
 	int wave;
+	int startTime;
+	bool mouseClicked = false;
 
 	bool keysPressedLastFrame;
 	bool gameOver;
 	bool paused;
 	bool invincible;
 	int frameCount;
+	bool Locking = false;
 };

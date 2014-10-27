@@ -22,13 +22,14 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
-#include "Bitmap.h"
 #include <gdiPlus.h>
 #pragma comment(lib,"gdiplus.lib")
 
 using std::string;
 
 LPDIRECT3DDEVICE9 pDevice;
+LPD3DXSPRITE spriteobj;
+LPD3DXSPRITE spriteobj2;
 
 D3DGraphics::D3DGraphics( HWND hWnd )
 {
@@ -53,16 +54,9 @@ D3DGraphics::D3DGraphics( HWND hWnd )
 	d3dpp.BackBufferFormat = D3DFMT_X8R8G8B8;
 	d3dpp.BackBufferCount = 1;
 
-	bool murrayPlaying = true;
+	d3dpp.BackBufferWidth = RIGHTBOUNDARY + 5;
+	d3dpp.BackBufferHeight = LOWERBOUNDARY + 5;
 
-	if (murrayPlaying){
-		d3dpp.BackBufferWidth = 1366;
-		d3dpp.BackBufferHeight = 768;
-	}
-	else {
-		d3dpp.BackBufferWidth = 1920;
-		d3dpp.BackBufferHeight = 1080;
-	}
 	//d3dpp. do this to see all parts of struct. same with any other class etc.
 
    // result = pDirect3D->CreateDevice( D3DADAPTER_DEFAULT,D3DDEVTYPE_HAL,hWnd,
@@ -75,6 +69,7 @@ D3DGraphics::D3DGraphics( HWND hWnd )
 	assert( !FAILED( result ) );
 
 	D3DXCreateSprite(pDevice, &spriteobj);
+	D3DXCreateSprite(pDevice, &spriteobj2);
 }
 
 void D3DGraphics::Sprite_Transform_Draw(LPDIRECT3DTEXTURE9 image, int x, int y, int width, int height,
@@ -98,11 +93,8 @@ void D3DGraphics::Sprite_Transform_Draw(LPDIRECT3DTEXTURE9 image, int x, int y, 
 	spriteobj->SetTransform(&mat);
 
 	//calculate frame location in source image
-	//int fx = (frame % columns) * width;
-	//int fy = (frame / columns) * height;
-	
-	int fx = 0;
-	int fy = 0;
+	int fx = (frame % columns) * width;
+	int fy = (frame / columns) * height;
 	RECT srcRect = { fx, fy, fx + width, fy + height};
 
 	//draw the sprite frame
@@ -162,6 +154,10 @@ D3DGraphics::~D3DGraphics()
 	if (spriteobj) {
 		spriteobj->Release();
 		spriteobj = NULL;
+	}
+	if (spriteobj2) {
+		spriteobj2->Release();
+		spriteobj2 = NULL;
 	}
 	//GET SOME MORE RELEASE
 }
@@ -295,6 +291,40 @@ void D3DGraphics::DrawCircle( int centerX,int centerY,int radius,int r,int g,int
 		PutPixel( centerX + y,centerY - x,r,g,b );
 		PutPixel( centerX - y,centerY - x,r,g,b );
 	}
+}
+
+LPD3DXFONT D3DGraphics::MakeFont(string name, int size)
+{
+	LPD3DXFONT font = NULL;
+
+	D3DXFONT_DESC desc = {
+		size,                   //height
+		0,                      //width
+		0,                      //weight
+		0,                      //miplevels
+		false,                  //italic
+		DEFAULT_CHARSET,        //charset
+		OUT_TT_PRECIS,          //output precision
+		CLIP_DEFAULT_PRECIS,    //quality
+		DEFAULT_PITCH,          //pitch and family
+		""                      //font name
+	};
+
+	strcpy(desc.FaceName, name.c_str());
+
+	D3DXCreateFontIndirect(pDevice, &desc, &font);
+
+	return font;
+}
+
+void D3DGraphics::FontPrint(LPD3DXFONT font, int x, int y, string text, D3DCOLOR color)
+{
+	//figure out the text boundary
+	RECT rect = { x, y, 0, 0 };
+	font->DrawText(NULL, text.c_str(), text.length(), &rect, DT_CALCRECT, color);
+
+	//print the text
+	font->DrawText(spriteobj2, text.c_str(), text.length(), &rect, DT_LEFT, color);
 }
 
 /*bool D3DGraphics::CollisionD(float x1, float y1, float x2, float y2, int dimension1, int dimension2)

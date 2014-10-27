@@ -28,8 +28,26 @@
 //extern LPD3DXSPRITE spriteobj;
 //extern LPDIRECT3D9 pDirect3D;
 extern LPDIRECT3DDEVICE9 pDevice;
+extern LPD3DXSPRITE spriteobj;
+extern LPD3DXSPRITE spriteobj2;
 //extern LPDIRECT3DSURFACE9 pBackBuffer;
 //extern D3DLOCKED_RECT		backRect;*/
+//bool murrayPlaying = false;
+
+#define MURRAYPLAYING 2
+
+//get rid of the 5 difference, shouldnt matter and do it in the cases it does matter. Therefore we can use these for the mouse, collision, backbuffer and all resolutions.
+#if (MURRAYPLAYING == 1)
+#define LEFTBOUNDARY 5
+#define RIGHTBOUNDARY 1361
+#define UPPERBOUNDARY 5
+#define LOWERBOUNDARY 763
+#else 
+#define LEFTBOUNDARY 5
+#define RIGHTBOUNDARY 1915
+#define UPPERBOUNDARY 5
+#define LOWERBOUNDARY 1075
+#endif
 
 class D3DGraphics
 {
@@ -45,6 +63,8 @@ public:
 	void DrawLine( int x1,int y1,int x2,int y2,int r,int g,int b );
 	void DrawCircle( int cx,int cy,int radius,int r,int g,int b );
 	void DrawDisc( int cx,int cy,int r,int rd,int g,int b );
+	LPD3DXFONT MakeFont(std::string name, int size);
+	void FontPrint(LPD3DXFONT font, int x, int y, std::string text, D3DCOLOR color);
 	void BeginFrame();
 	void EndFrame();
 	void rendering();
@@ -59,5 +79,7 @@ private:
 	LPDIRECT3D9 pDirect3D;
 	LPDIRECT3DSURFACE9 pBackBuffer;
 	D3DLOCKED_RECT		backRect;
-	LPD3DXSPRITE spriteobj;
+	
+
+
 };

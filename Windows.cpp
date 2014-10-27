@@ -23,6 +23,7 @@
 #include "Game.h"
 #include "resource.h"
 #include "Mouse.h"
+#include "D3DGraphics.h"
 
 static KeyboardServer kServ;
 static MouseServer mServ;
@@ -89,7 +90,7 @@ LRESULT WINAPI MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 			{
 				int x = (short)LOWORD( lParam );
 				int y = (short)HIWORD( lParam );
-				if( x > 0 && x < 1920 && y > 0 && y < 1080 )
+				if( x > 0 && x < RIGHTBOUNDARY && y > 0 && y < LOWERBOUNDARY )
 				{
 					mServ.OnMouseMove( x,y );
 					if( !mServ.IsInWindow() )
