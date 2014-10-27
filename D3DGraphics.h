@@ -28,6 +28,7 @@
 //extern LPD3DXSPRITE spriteobj;
 //extern LPDIRECT3D9 pDirect3D;
 extern LPDIRECT3DDEVICE9 pDevice;
+<<<<<<< HEAD
 extern LPD3DXSPRITE spriteobj;
 extern LPD3DXSPRITE spriteobj2;
 //extern LPDIRECT3DSURFACE9 pBackBuffer;
@@ -48,6 +49,10 @@ extern LPD3DXSPRITE spriteobj2;
 #define UPPERBOUNDARY 5
 #define LOWERBOUNDARY 1075
 #endif
+=======
+//extern LPDIRECT3DSURFACE9 pBackBuffer;
+//extern D3DLOCKED_RECT		backRect;*/
+>>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 
 class D3DGraphics
 {
@@ -63,8 +68,11 @@ public:
 	void DrawLine( int x1,int y1,int x2,int y2,int r,int g,int b );
 	void DrawCircle( int cx,int cy,int radius,int r,int g,int b );
 	void DrawDisc( int cx,int cy,int r,int rd,int g,int b );
+<<<<<<< HEAD
 	LPD3DXFONT MakeFont(std::string name, int size);
 	void FontPrint(LPD3DXFONT font, int x, int y, std::string text, D3DCOLOR color);
+=======
+>>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 	void BeginFrame();
 	void EndFrame();
 	void rendering();
@@ -79,7 +87,11 @@ private:
 	LPDIRECT3D9 pDirect3D;
 	LPDIRECT3DSURFACE9 pBackBuffer;
 	D3DLOCKED_RECT		backRect;
+<<<<<<< HEAD
 	
 
 
+=======
+	LPD3DXSPRITE spriteobj;
+>>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 };

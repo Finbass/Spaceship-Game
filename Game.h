@@ -28,19 +28,34 @@
 
 using std::vector;
 
+<<<<<<< HEAD
+=======
+/*#define LEFTBOUNDARY 5
+#define RIGHTBOUNDARY 1361
+#define UPPERBOUNDARY 5
+#define LOWERBOUNDARY 763*/
+
+>>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 #define ROTATIONAMOUNT 0.0001f
 #define PI 3.14159265
 
 #define SIZEOFENEMYSHIPFLEET 15
+<<<<<<< HEAD
 #define SIZEOFINSECTFLEET 10
 
 //#define PLAYERBULLETSPEED 3.0f
 #define PLAYERBULLETSPEED 8.0f
+=======
+#define SIZEOFINSECTFLEET 15
+
+#define PLAYERBULLETSPEED 10.0f
+>>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 #define ENEMYBULLETSPEED 2.3f
 #define PLAYERMSSILESPEED 7
 
 #define PLAYERSHIPLIVES 20
 #define FRAMESPERFLASH 5
+<<<<<<< HEAD
 //this or
 //#define SHIPFLASHCOLOR D3DCOLOR_XRGB(255, 200, 200)
 //this?
@@ -48,10 +63,15 @@ using std::vector;
 
 #define FRAMESPEREXPLOSION 5
 
+=======
+#define SHIPFLASHCOLOR D3DCOLOR_XRGB(255, 0, 200)
+
+>>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 #define ENEMYDIMENSION 150
 #define PLAYERDIMENSION 250
 
 #define INSECTSCALE 0.5f
+<<<<<<< HEAD
 #define ENEMYSHIPSCALE 0.8f
 //make it 2.0f just to prove the point about constants and how shit hardcoding is
 #define PLAYERSHIPSCALE 0.5f
@@ -117,6 +137,44 @@ struct explosion : public object
 	int timer;
 };*/
 
+=======
+#define ENEMYSHIPSCALE 0.7f
+//make it 2.0f just to prove the point about constants and how shit hardcoding is
+#define PLAYERSHIPSCALE 0.5f
+
+const int AMOUNTOFVECTORS = 1;
+
+struct bullet 
+{
+	float x, y;
+	int r,g,b; //keep these and draw multicoloured plasma at certain stages of the game or always
+	float vx, vy;
+	float rotation;  //maybe not needed just set once but then again maybe needed coz everything has to stay rotated
+	int frame;
+	int frameExposure;
+};
+
+struct missile
+{
+	float x, y;
+	float vx, vy;
+	float rotation;  //maybe not needed just set once but then again maybe needed coz everything has to stay rotated
+	int frame;
+	int frameExposure;
+};
+
+struct Ship
+{
+	float x, y;
+	float vx, vy;
+	int lives;
+	float rotation;
+	bool ifHit;
+	short framesSinceHit;
+	//D3DCOLOR color; Maybe doesnt have to be part of each ship for flash hit effect. But then again maybe it does.
+};
+
+>>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 enum weaponChoice{
 	BULLET,
 	MISSILE,
@@ -126,10 +184,22 @@ enum weaponChoice{
 class Game
 {
 public:
+<<<<<<< HEAD
 	//ALL FUNCTIONS-------------------------------------------------------------------:
 	Game( HWND hWnd,const KeyboardServer& kServer,const MouseServer& mServer);
 	~Game();
 	void Go();
+=======
+	//ALL FUNCTIONS:
+	Game( HWND hWnd,const KeyboardServer& kServer,const MouseServer& mServer);
+	~Game();
+	void Go();
+	int LEFTBOUNDARY;
+	int RIGHTBOUNDARY;
+	int UPPERBOUNDARY;
+	int LOWERBOUNDARY;
+	bool murrayPlaying = false;
+>>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 private:
 	//DRAWING
 	void ComposeFrame();
@@ -143,23 +213,34 @@ private:
 	void bulletLogic();
 	void createBullet(bool ifPlayer);
 	void createMissile(bool ifPlayer);
+<<<<<<< HEAD
 	void createExplosion(explosion& a, float x, float y, float rotation, float scale, int r, int g, int b);
 	void createLockOn();
 	void setUpShips();
 	void findRotation(int x1, int y1, int x2, int y2, float& rotation);
 private:
 	//ALL VARIABLES--------------------------------------------------------------------:
+=======
+	void setUpShips();
+	void findRotation(int x1, int y1, int x2, int y2, float& rotation);
+private:
+	//ALL VARIABLES:
+>>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 	D3DGraphics gfx;
 	KeyboardClient kbd;
 	MouseClient mouse;
 	DSound audio;
 
+<<<<<<< HEAD
 	Sound plasmaShot;
 
+=======
+>>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 	LPDIRECT3DTEXTURE9 playerShipTexture;
 	LPDIRECT3DTEXTURE9 enemyShipTexture;
 	LPDIRECT3DTEXTURE9 insectKamikazeTexture;
 
+<<<<<<< HEAD
 	LPDIRECT3DTEXTURE9 plasmaBulletTexture;
 	LPDIRECT3DTEXTURE9 missileTexture;
 
@@ -170,6 +251,10 @@ private:
 	LPD3DXFONT fontArial24 = NULL;
 	LPD3DXFONT fontGaramond36 = NULL;
 	LPD3DXFONT fontTimesNewRoman40 = NULL;
+=======
+	LPDIRECT3DTEXTURE9 plasmaBullet;
+	LPDIRECT3DTEXTURE9 testBallTexture;
+>>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 
 	weaponChoice weaponChoice;
 	float speed;	
@@ -179,12 +264,18 @@ private:
 	vector<Ship> insectKamikazeFleet;
 
 	vector<bullet> arrayOfVectors[AMOUNTOFVECTORS];
+<<<<<<< HEAD
 	vector<bullet> enemyBulletVector;
 	
 	vector<missile> missileVector;
 	vector<Ship*> lockedOnVector;
 
 	vector<explosion> explosionVector;
+=======
+	vector<missile> missileVector;
+
+	vector<bullet> enemyBulletVector;
+>>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 
 	//sprinkler
 	float xVel, yVel;
@@ -192,13 +283,19 @@ private:
 	bool clockwise;
 
 	int wave;
+<<<<<<< HEAD
 	int startTime;
 	bool mouseClicked = false;
+=======
+>>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 
 	bool keysPressedLastFrame;
 	bool gameOver;
 	bool paused;
 	bool invincible;
 	int frameCount;
+<<<<<<< HEAD
 	bool Locking = false;
+=======
+>>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 };
