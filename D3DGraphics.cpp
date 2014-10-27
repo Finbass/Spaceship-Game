@@ -22,21 +22,14 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
-<<<<<<< HEAD
-=======
-#include "Bitmap.h"
->>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 #include <gdiPlus.h>
 #pragma comment(lib,"gdiplus.lib")
 
 using std::string;
 
 LPDIRECT3DDEVICE9 pDevice;
-<<<<<<< HEAD
 LPD3DXSPRITE spriteobj;
 LPD3DXSPRITE spriteobj2;
-=======
->>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 
 D3DGraphics::D3DGraphics( HWND hWnd )
 {
@@ -61,22 +54,9 @@ D3DGraphics::D3DGraphics( HWND hWnd )
 	d3dpp.BackBufferFormat = D3DFMT_X8R8G8B8;
 	d3dpp.BackBufferCount = 1;
 
-<<<<<<< HEAD
 	d3dpp.BackBufferWidth = RIGHTBOUNDARY + 5;
 	d3dpp.BackBufferHeight = LOWERBOUNDARY + 5;
 
-=======
-	bool murrayPlaying = true;
-
-	if (murrayPlaying){
-		d3dpp.BackBufferWidth = 1366;
-		d3dpp.BackBufferHeight = 768;
-	}
-	else {
-		d3dpp.BackBufferWidth = 1920;
-		d3dpp.BackBufferHeight = 1080;
-	}
->>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 	//d3dpp. do this to see all parts of struct. same with any other class etc.
 
    // result = pDirect3D->CreateDevice( D3DADAPTER_DEFAULT,D3DDEVTYPE_HAL,hWnd,
@@ -89,10 +69,7 @@ D3DGraphics::D3DGraphics( HWND hWnd )
 	assert( !FAILED( result ) );
 
 	D3DXCreateSprite(pDevice, &spriteobj);
-<<<<<<< HEAD
 	D3DXCreateSprite(pDevice, &spriteobj2);
-=======
->>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 }
 
 void D3DGraphics::Sprite_Transform_Draw(LPDIRECT3DTEXTURE9 image, int x, int y, int width, int height,
@@ -116,16 +93,8 @@ void D3DGraphics::Sprite_Transform_Draw(LPDIRECT3DTEXTURE9 image, int x, int y, 
 	spriteobj->SetTransform(&mat);
 
 	//calculate frame location in source image
-<<<<<<< HEAD
 	int fx = (frame % columns) * width;
 	int fy = (frame / columns) * height;
-=======
-	//int fx = (frame % columns) * width;
-	//int fy = (frame / columns) * height;
-	
-	int fx = 0;
-	int fy = 0;
->>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 	RECT srcRect = { fx, fy, fx + width, fy + height};
 
 	//draw the sprite frame
@@ -186,13 +155,10 @@ D3DGraphics::~D3DGraphics()
 		spriteobj->Release();
 		spriteobj = NULL;
 	}
-<<<<<<< HEAD
 	if (spriteobj2) {
 		spriteobj2->Release();
 		spriteobj2 = NULL;
 	}
-=======
->>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 	//GET SOME MORE RELEASE
 }
 
@@ -327,7 +293,6 @@ void D3DGraphics::DrawCircle( int centerX,int centerY,int radius,int r,int g,int
 	}
 }
 
-<<<<<<< HEAD
 LPD3DXFONT D3DGraphics::MakeFont(string name, int size)
 {
 	LPD3DXFONT font = NULL;
@@ -362,8 +327,6 @@ void D3DGraphics::FontPrint(LPD3DXFONT font, int x, int y, string text, D3DCOLOR
 	font->DrawText(spriteobj2, text.c_str(), text.length(), &rect, DT_LEFT, color);
 }
 
-=======
->>>>>>> 570942f798fda6f6209c985806d7b944f5151d7e
 /*bool D3DGraphics::CollisionD(float x1, float y1, float x2, float y2, int dimension1, int dimension2)
 {
 	double radius1, radius2;
