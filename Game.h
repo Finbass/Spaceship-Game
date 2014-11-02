@@ -39,6 +39,8 @@ using std::vector;
 #define ENEMYBULLETSPEED 2.3f
 #define PLAYERMSSILESPEED 7
 
+#define INSECTSPEED 1.5f
+
 #define PLAYERSHIPLIVES 20
 #define FRAMESPERFLASH 5
 //this or
@@ -63,15 +65,11 @@ using std::vector;
 
 const int AMOUNTOFVECTORS = 1;
 
-//INHERITANCE.
-//make allthese inherit from object ahaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa just looks tight as fuck
-
 struct object {
 	float x, y;
 	int frame;
 	float rotation;
 };
-
 
 struct bullet : public object
 {	
@@ -84,6 +82,13 @@ struct missile : public object
 {
 	float vx, vy;
 	int frameExposure;
+};
+
+struct explosion : public object
+{
+	int frameExposure;
+	int r, g, b;
+	float scale;
 };
 
 struct Ship : public object
@@ -99,16 +104,25 @@ struct Ship : public object
 	//D3DCOLOR color; Maybe doesnt have to be part of each ship for flash hit effect. But then again maybe it does.
 };
 
+struct Insect : public Ship
+{
+
+};
+
+struct EnemyShip1 : public Ship
+{
+
+};
+
 struct PlayerShip : public Ship
 {
 	int shield;
+	int missileAmmunition;
 };
 
-struct explosion : public object
+struct Squad
 {
-	int frameExposure;
-	int r, g, b;
-	float scale;
+	vector<Ship*> shipArray;
 };
 
 /*struct lockOnCandidate
@@ -140,12 +154,15 @@ private:
 	//LOGIC
 	void playerShipLogic();
 	void updateEnemy();
+	void updateEnemyShip1s();
+	void updateInsects();
 	void bulletLogic();
 	void createBullet(bool ifPlayer);
 	void createMissile(bool ifPlayer);
 	void createExplosion(explosion& a, float x, float y, float rotation, float scale, int r, int g, int b);
 	void createLockOn();
 	void setUpShips();
+	void makeEnemy(int whichShip, int squadCreatedCount);
 	void findRotation(int x1, int y1, int x2, int y2, float& rotation);
 private:
 	//ALL VARIABLES--------------------------------------------------------------------:
@@ -174,24 +191,66 @@ private:
 	weaponChoice weaponChoice;
 	float speed;	
 
+
 	Ship playerShip;
-	vector<Ship> enemyShipFleet;
-	vector<Ship> insectKamikazeFleet;
+	//vectors inside vectors make everything easy
+	//also vectors of pointers to ships are excellent aswell
+	//show polymorphiosm and inheritence with enemyship1,squad,ship.
+	vector<Squad> squadVector;
+	Squad squadTest;
+	vector<EnemyShip1> enemyShipFleet;
+	vector<Insect> insectKamikazeFleet;
 
 	vector<bullet> arrayOfVectors[AMOUNTOFVECTORS];
 	vector<bullet> enemyBulletVector;
 	
 	vector<missile> missileVector;
 	vector<Ship*> lockedOnVector;
+	//break it down like this maybe. Limit size of lockingonvector to just 1 for now. endless size for lockonvector
+	vector<Ship*> lockingOnVector;
 
 	vector<explosion> explosionVector;
+
+	time_t start;
+	double secondsSinceStart;
+	int waveTimer;
+	int nextSquadTimer;
+	int nextEnemyTimer;
+	int timeTillNextSquad;
+	int minTimeBetweenWaves;
+
+	int wave;
+	int wavesPerLevel;
+	int squadsPerWave;
+	int squadsCreatedLevel;
+	int squadsCreatedWave;
+	int squadsDefeatedLevel;
+	int squadsDefeatedWave;
+	
+
+	//12 variables. 3 objects. 2 of them being single ships and the 3rd being the totalCount;
+	int totalEnemyShipCreatedLevel;
+	int totalEnemyShipCreatedWave;
+	int totalEnemyShipKillsLevel;
+	int totalEnemyShipKillsWave;
+	
+	int totalInsectCreatedLevel;
+	int totalInsectCreatedWave;	
+	int totalInsectKillsLevel;
+	int totalInsectKillsWave;
+
+	int totalShipCreatedLevel;
+	int totalShipCreatedWave;
+	int totalShipKillsLevel;
+	int totalShipKillsWave;
+	
 
 	//sprinkler
 	float xVel, yVel;
 	bool changeDirection;
 	bool clockwise;
 
-	int wave;
+	bool doneIt;
 	int startTime;
 	bool mouseClicked = false;
 

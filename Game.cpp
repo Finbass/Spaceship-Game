@@ -33,10 +33,10 @@ Game::Game( HWND hWnd,const KeyboardServer& kServer,const MouseServer& mServer )
 	mouse( mServer )
 {
 	frameCount = 0;
-	wave = 0;
+	
 	keysPressedLastFrame = false;
 	gameOver = false;
-	invincible = false;
+	invincible = true;
 	paused = false;
 
 	//sprinkler stuff, stupid maybe
@@ -64,29 +64,49 @@ Game::Game( HWND hWnd,const KeyboardServer& kServer,const MouseServer& mServer )
 	fontGaramond36 = gfx.MakeFont("Garamond", 36);
 	fontTimesNewRoman40 = gfx.MakeFont("Times new Roman", 40);
 
-	setUpShips();
+	wave = 1;
+	waveTimer = 0;
+	nextSquadTimer = 0;
+	nextEnemyTimer = 0;
+	start = time(0);	
+	doneIt = false; //rename
+	minTimeBetweenWaves = 3;
+	timeTillNextSquad = minTimeBetweenWaves;
+	totalEnemyShipCreatedLevel = 0;
+	totalEnemyShipCreatedWave = 0;
+	squadsCreatedLevel = 0;
+	squadsDefeatedLevel = 0;
+	squadsCreatedWave = 0;
+	squadsDefeatedWave = 0;
+	squadsPerWave = 15;
+	totalInsectCreatedLevel = 0;
+	totalInsectCreatedWave = 0;
+
+	//hahaaa very interesting. Explain reservations. vectors dynamic memory. Massive bug.
+	insectKamikazeFleet.reserve(30);
+	enemyShipFleet.reserve(30);
+
+	totalEnemyShipKillsLevel = 0;
+	totalEnemyShipKillsWave = 0;
+	totalInsectKillsLevel = 0;
+	totalInsectKillsWave = 0;
+
+	totalShipCreatedLevel = 0;
+	totalShipCreatedWave = 0;
+	totalShipKillsLevel = 0;
+	totalShipKillsWave = 0;
+
+	wavesPerLevel = 3;
+	//setUpShips();
 
 	playerShipTexture = gfx.LoadTexture("Player ship 3.bmp", D3DCOLOR_XRGB(0, 0, 0));
 	enemyShipTexture = gfx.LoadTexture("Ship 3.bmp");
 	insectKamikazeTexture = gfx.LoadTexture("insectAnm 15 frame bmp.bmp", D3DCOLOR_XRGB(0, 148, 255));
-	//plasmaBullet = gfx.LoadTexture("PlasmaBullet.bmp 2.bmp", D3DCOLOR_XRGB(255, 255, 255));
 	plasmaBulletTexture = gfx.LoadTexture("Blue ball bullet 1.bmp", D3DCOLOR_XRGB(0, 0, 0));
 	missileTexture = gfx.LoadTexture("Bomb 1 (cropped).bmp");
 	explosionTexture = gfx.LoadTexture("Explosion 2 sprite sheet (2) shaded.bmp", D3DCOLOR_XRGB(33, 198, 255));
 	missileIconTexture = gfx.LoadTexture("Bomb Icon 1.bmp");
 	bulletIconTexture = gfx.LoadTexture("Laser Icon 1.bmp");
-	/*if (murrayPlaying) {
-		LEFTBOUNDARY = 5;
-		RIGHTBOUNDARY = 1361;
-		UPPERBOUNDARY = 5;
-		LOWERBOUNDARY = 763;
-	}
-	else {*/
-		/*LEFTBOUNDARY = 5;
-		RIGHTBOUNDARY = 1915;
-		UPPERBOUNDARY = 5;
-		LOWERBOUNDARY = 1075;*/
-	//}
 }
 
 Game::~Game() {
@@ -121,19 +141,35 @@ void Game::Go()
 		keysPressedLastFrame = true;
 	}	
 
+	//wow to prove exactly when just simple computation (not rendering) can slow shit down.
+	/*for (int i = 0; i < 100000000; i++)
+	{
+		;
+	}*/
+	/*for (int i = 0; i < 10000000; i++)
+	{
+		;
+	}*/
+
 	if (!paused) {
 		if (!gameOver) {
+			secondsSinceStart = difftime(time(0), start);
+			waveTimer = secondsSinceStart;
+			nextSquadTimer = secondsSinceStart;
+			nextEnemyTimer = secondsSinceStart;
+
+			setUpShips();
 			playerShipLogic();
 			bulletLogic();
-			updateEnemy();
+			updateEnemy();	
 		}
 	}
 
+	
+
 	//why isnt this working?
 	//ahh wasnt working because there was a separate make false for if enter wasnt pressed in bullet logic
-	if (!(kbd.SpaceIsPressed()) && !(kbd.EnterIsPressed())) keysPressedLastFrame = false;
-
-	
+	if (!(kbd.SpaceIsPressed()) && !(kbd.EnterIsPressed())) keysPressedLastFrame = false;	
 
 	pDevice->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
 	//2 PROBLEMS:
@@ -194,7 +230,56 @@ void Game::drawHealth() {
 }
 
 void Game::setUpShips() {
-	for (int i = 0; i < SIZEOFENEMYSHIPFLEET; i++) {
+	const int maxAmountInSquad = 4;
+	if (wave == 1) {
+		if (nextSquadTimer % timeTillNextSquad == 0 && nextSquadTimer != 0 && !doneIt && squadsCreatedWave < squadsPerWave) {
+			int shipType;
+			int noOfShipsInSquad = rand() % maxAmountInSquad + 1;
+			Squad squad;
+			squad.shipArray.clear();
+			squadVector.push_back(squad);
+			//squadVector.push_back(Squad());
+			for (int i = 0; i < noOfShipsInSquad; i++) {
+				shipType = rand() % 2;
+				shipType = 1;
+				if (shipType == 0) { totalEnemyShipCreatedLevel++; totalEnemyShipCreatedWave++;}
+				else if (shipType == 1) { totalInsectCreatedLevel++; totalInsectCreatedWave++; }
+				totalShipCreatedLevel = totalEnemyShipCreatedLevel + totalInsectCreatedLevel;
+				totalShipCreatedWave = totalEnemyShipCreatedWave + totalInsectCreatedWave;	
+				makeEnemy(shipType, squadsCreatedWave);
+			}
+			timeTillNextSquad = rand() % 4 + 4;
+			doneIt = true;
+			squadsCreatedLevel++;
+			squadsCreatedWave++;
+		}
+		else if (nextSquadTimer % timeTillNextSquad != 0 && doneIt) doneIt = false;
+		if (squadsDefeatedWave >= squadsPerWave) {
+			wave++;
+			totalShipCreatedWave = 0; //not needed but fuck it for now
+			totalEnemyShipCreatedWave = 0;
+			totalInsectCreatedWave = 0;
+			squadsCreatedWave = 0;
+			squadsDefeatedWave = 0;
+		}
+	}
+	
+	
+	if (wave == 2) {
+
+
+	}
+
+	/* have a laugh at this
+	if (nextSquadTimer % 2 == 0 && !doneIt) {
+		int a = rand() % 2;
+		makeEnemy(a);
+		doneIt = true;
+	}
+	else doneIt = false;
+	*/
+
+	/*for (int i = 0; i < SIZEOFENEMYSHIPFLEET; i++) {
 		Ship enemyShip;
 		enemyShip.ifHit = false;
 		enemyShip.framesSinceHit = 0;
@@ -215,29 +300,72 @@ void Game::setUpShips() {
 		insect.ifHit = false;
 		insect.framesSinceHit = 0;
 		insect.lives = 15;
-		insect.speed = 2.2f;
+		insect.speed = INSECTSPEED;
 		insect.y = (ENEMYDIMENSION * INSECTSCALE) / 2 + 20;
 		insect.x = rand() % (RIGHTBOUNDARY - ENEMYDIMENSION);
 		insect.frame = 0;
 		insect.frameExposure = 0;
 		insectKamikazeFleet.push_back(insect);
+	}*/
+}
+
+void Game::makeEnemy(int whichShip, int squadCreatedCount) {
+	squadCreatedCount = 0;
+	if (whichShip == 0) {
+		EnemyShip1 enemyShip;
+		enemyShip.ifHit = false;
+		enemyShip.framesSinceHit = 0;
+		enemyShip.lives = 20;
+		enemyShip.y = (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2 + 10;
+		//this has got to be fixed
+		enemyShip.x = rand() % RIGHTBOUNDARY - (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2;
+		enemyShip.speed = 1.0f;
+		//enemyShip.x = LEFTBOUNDARY + 30 + (i*100);
+		enemyShip.vx = 0;
+		//enemyShip.vy = 1.0f;
+		enemyShip.vy = 0.0f;
+		enemyShipFleet.push_back(enemyShip);
+		//squadVector[squadCreatedCount].shipArray.push_back(&enemyShipFleet.back());
+		//squadVector[squadCreatedCount].shipArray.push_back(&enemyShipFleet[(enemyShipFleet.size() - 1)]);
+		EnemyShip1* pEnemyShip = &enemyShipFleet[(enemyShipFleet.size() - 1)];
+		squadTest.shipArray.push_back(pEnemyShip);
+		//squadTest.shipArray.push_back(&enemyShipFleet[(enemyShipFleet.size() - 1)]);
+	}
+
+	else if (whichShip == 1) {
+		Insect insect;
+		insect.ifHit = false;
+		insect.framesSinceHit = 0;
+		insect.lives = 15;
+		insect.speed = INSECTSPEED;
+		insect.y = (ENEMYDIMENSION * INSECTSCALE) / 2 + 20;
+		insect.x = rand() % RIGHTBOUNDARY - (ENEMYDIMENSION * INSECTSCALE) / 2;
+		insect.frame = 0;
+		insect.frameExposure = 0;
+		insectKamikazeFleet.push_back(insect);
+		//squadVector[squadCreatedCount].shipArray.push_back(&insectKamikazeFleet.back());
+		//squadVector[squadCreatedCount].shipArray.push_back(&insectKamikazeFleet[(insectKamikazeFleet.size() - 1)]);
+		//squadTest.shipArray.push_back(&insectKamikazeFleet[(insectKamikazeFleet.size() - 1)]);
+		Insect* pInsectShip = &insectKamikazeFleet[(insectKamikazeFleet.size() - 1)];
+		//Insect* pInsectShip = &insect;
+		squadTest.shipArray.push_back(pInsectShip);
 	}
 }
 
 void Game::playerShipLogic() {
-	if (kbd.RightIsPressed()/* || kbd.dIsPressed()*/) {
+	if (kbd.RightIsPressed()) {
 		playerShip.x = playerShip.x + speed;
 	}
 
-	if (kbd.LeftIsPressed()/* || kbd.aIsPressed()*/) {
+	if (kbd.LeftIsPressed()) {
 		playerShip.x = playerShip.x - speed;
 	}
 
-	if (kbd.UpIsPressed()/* || kbd.wIsPressed()*/) {
+	if (kbd.UpIsPressed()) {
 		playerShip.y = playerShip.y - speed;
 	}
 
-	if (kbd.DownIsPressed()/* || kbd.sIsPressed()*/) {
+	if (kbd.DownIsPressed()) {
 		playerShip.y = playerShip.y + speed;
 	}
 
@@ -303,7 +431,57 @@ void Game::playerShipLogic() {
 }
 
 void Game::updateEnemy() {
-	//enemy ship rotation, movement, boundaries, bullet and ship collision
+	updateEnemyShip1s();
+	updateInsects();
+
+	if (insectKamikazeFleet.size() == 0 && enemyShipFleet.size() == 0) {
+		//setUpShips();
+		//wave++;
+		//different now.
+	}
+
+	int i;
+	int k;
+	for (i = 0; i < squadVector.size(); i++) {
+		bool squadDefeated = false;
+		int allShipsInSquadDefeated = 0;
+		int shipsInSquad = squadVector[i].shipArray.size();
+		for (k = 0; k < squadVector[i].shipArray.size(); k++) {
+			if (squadVector[i].shipArray[k]->lives <= 0) {
+				allShipsInSquadDefeated++;
+				//squadVector[i].shipArray.erase(squadVector[i].shipArray.begin() + k);
+			}
+		}
+		//if (allShipsInSquadDefeated == squadVector[i].shipArray.size()) squadDefeated = true;
+		if (allShipsInSquadDefeated == shipsInSquad) {
+		//if (squadDefeated) {
+			squadsDefeatedLevel++;
+			squadsDefeatedWave++;
+			squadVector.erase(squadVector.begin() + i);
+		//}
+		}
+	}
+	
+	for (int k = 0; k < explosionVector.size(); k++) {
+		explosionVector.at(k).frameExposure++;
+		if (explosionVector.at(k).frameExposure > EXPLOSIONSPEED) {
+			explosionVector.at(k).frame++;
+			explosionVector.at(k).frameExposure = 0;
+			if (explosionVector.at(k).frame > 12) explosionVector.erase(explosionVector.begin() + k);
+		}
+	}
+}
+
+void Game::updateEnemyShip1s() {
+	/*********************************************************************************************
+
+	ENEMY SHIP 1S
+
+	***********************************************************************************************/
+
+	//actually we should just make updateInsect and update enemyship functions here
+
+	//rotation, movement, boundaries, bullet and ship collision
 	for (int i = 0; i < enemyShipFleet.size(); i++) {
 		findRotation(enemyShipFleet[i].x, enemyShipFleet[i].y, playerShip.x, playerShip.y, enemyShipFleet[i].rotation);
 		enemyShipFleet[i].x += enemyShipFleet[i].vx;
@@ -311,20 +489,20 @@ void Game::updateEnemy() {
 
 		/*
 		**************************************************************************************************************
-		
-		changes to try(change direction somehow if boundary hit) Talking about enemyship1 (which he is called from now on to avoid ambiguity with the insect with just enemyship itself): 
+
+		changes to try(change direction somehow if boundary hit) Talking about enemyship1 (which he is called from now on to avoid ambiguity with the insect with just enemyship itself):
 		1. Make his y = x * x
 		2. y = x * x * x, log(x) sqrt(x), sin(x) etc
 		3. his y = cos(rotation) and x = y * y
 		4. find circle formula (based on centre maybe)
 		5. semi circle
 		6. form function which takes distance close to player and works dynamic circle  which changes every frame if player moves. Then try semi circle. Work it maybe with angles, or maybe just come circumference follower
-		7. Finally work some way finally after doing all that to make him avoid his fellow teammates ships which will be hard. 
-			Function that takes in x and y of every teammate within 200-400 pixels and moves in a direction away from them but towards you if possible. Have them go slow so they can easily plan in a group mentality kinda way?
-			Maybe have them eventually just go fast and slow. They slow down when clsoe to an enemy ship and eventually move away. They maybe never get too close to an enemy ship because they slow down same with yours.
-		8. And separate point as to how it will look if you do eventually collide off an enemy ship. Maybe just bounce off and lose health so player avoids hitting them then. 
-		9. make them go in a parade kinda way. or a big s towards you and instead of avoiding you maybe enemyship1s also eventually crash into you but take their time about it. 
-			left all the way then small or mediumu turn towards right	
+		7. Finally work some way finally after doing all that to make him avoid his fellow teammates ships which will be hard.
+		Function that takes in x and y of every teammate within 200-400 pixels and moves in a direction away from them but towards you if possible. Have them go slow so they can easily plan in a group mentality kinda way?
+		Maybe have them eventually just go fast and slow. They slow down when clsoe to an enemy ship and eventually move away. They maybe never get too close to an enemy ship because they slow down same with yours.
+		8. And separate point as to how it will look if you do eventually collide off an enemy ship. Maybe just bounce off and lose health so player avoids hitting them then.
+		9. make them go in a parade kinda way. or a big s towards you and instead of avoiding you maybe enemyship1s also eventually crash into you but take their time about it.
+		left all the way then small or mediumu turn towards right
 		*/
 
 		if (enemyShipFleet[i].x + (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2 > RIGHTBOUNDARY) enemyShipFleet[i].x = RIGHTBOUNDARY - (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2;
@@ -337,9 +515,9 @@ void Game::updateEnemy() {
 			enemyShipFleet[i].y = UPPERBOUNDARY + (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2;
 			enemyShipFleet[i].vy *= -1;
 		}
-		if (enemyShipFleet[i].ifHit){
+		if (enemyShipFleet[i].ifHit) {
 			enemyShipFleet[i].framesSinceHit++;
-			if (enemyShipFleet[i].framesSinceHit > FRAMESPERFLASH){
+			if (enemyShipFleet[i].framesSinceHit > FRAMESPERFLASH) {
 				enemyShipFleet[i].framesSinceHit = 0;
 				enemyShipFleet[i].ifHit = false;
 			}
@@ -352,8 +530,7 @@ void Game::updateEnemy() {
 				if (arrayOfVectors[i].at(j).x > enemyShipFleet[k].x - (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2 &&
 					arrayOfVectors[i].at(j).x < enemyShipFleet[k].x + (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2 &&
 					arrayOfVectors[i].at(j).y > enemyShipFleet[k].y - (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2 &&
-					arrayOfVectors[i].at(j).y < enemyShipFleet[k].y + (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2) 
-				{
+					arrayOfVectors[i].at(j).y < enemyShipFleet[k].y + (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2) {
 					arrayOfVectors[i].erase(arrayOfVectors[i].begin() + j);
 					if (enemyShipFleet[k].lives > 1) {
 						enemyShipFleet[k].lives--;
@@ -362,11 +539,12 @@ void Game::updateEnemy() {
 					}
 					else {
 						createExplosion(explosion(), enemyShipFleet[k].x, enemyShipFleet[k].y, enemyShipFleet[k].rotation, 0.6f, rand() % 255, rand() % 255, rand() % 255);
-						for (int i = 0; i < lockedOnVector.size(); i++)
-						{
+						for (int i = 0; i < lockedOnVector.size(); i++) {
 							if (lockedOnVector[i] == &enemyShipFleet[k]) lockedOnVector.erase(lockedOnVector.begin());
 						}
 						enemyShipFleet.erase(enemyShipFleet.begin() + k);
+						totalEnemyShipKillsLevel++;
+						totalEnemyShipKillsWave++;
 						break;
 					}
 				}
@@ -374,25 +552,26 @@ void Game::updateEnemy() {
 		}
 	}
 
-	for (int k = 0; k < enemyShipFleet.size(); k++){
-		for (int i = 0; i < missileVector.size(); i++){
+	for (int k = 0; k < enemyShipFleet.size(); k++) {
+		for (int i = 0; i < missileVector.size(); i++) {
 			if (missileVector[i].x > enemyShipFleet[k].x - (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2 &&
 				missileVector[i].x < enemyShipFleet[k].x + (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2 &&
 				missileVector[i].y > enemyShipFleet[k].y - (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2 &&
-				missileVector[i].y < enemyShipFleet[k].y + (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2)
-			{
+				missileVector[i].y < enemyShipFleet[k].y + (ENEMYDIMENSION * ENEMYSHIPSCALE) / 2) {
 				missileVector.erase(missileVector.begin() + i);
 				if (enemyShipFleet[k].lives > 1) {
 					enemyShipFleet[k].lives = enemyShipFleet[k].lives - 35;
 					enemyShipFleet[k].ifHit = true;
 					enemyShipFleet[k].framesSinceHit = 0;
 				}
-				if (enemyShipFleet[k].lives < 1){
+				if (enemyShipFleet[k].lives < 1) {
 					createExplosion(explosion(), enemyShipFleet[k].x, enemyShipFleet[k].y, enemyShipFleet[k].rotation, 0.6f, 255, 255, 255);
 					for (int i = 0; i < lockedOnVector.size(); i++) {
 						if (lockedOnVector[i] == &enemyShipFleet[k]) lockedOnVector.erase(lockedOnVector.begin());
 					}
 					enemyShipFleet.erase(enemyShipFleet.begin() + k);
+					totalEnemyShipKillsLevel++;
+					totalEnemyShipKillsWave++;
 					break;
 				}
 			}
@@ -400,7 +579,14 @@ void Game::updateEnemy() {
 	}
 
 	if (frameCount % 60 == 0 && enemyShipFleet.size() > 0) createBullet(false);
+}
 
+void Game::updateInsects() {
+	/*********************************************************************************************
+
+	INSECTS!
+
+	***********************************************************************************************/
 	//insect kamikaze ship rotation, movement, boundaries, bullet and ship collision
 	for (int i = 0; i < insectKamikazeFleet.size(); i++) {
 		findRotation(insectKamikazeFleet[i].x, insectKamikazeFleet[i].y, playerShip.x, playerShip.y, insectKamikazeFleet[i].rotation);
@@ -420,9 +606,9 @@ void Game::updateEnemy() {
 		if (insectKamikazeFleet[i].y + (ENEMYDIMENSION * INSECTSCALE) / 2 > LOWERBOUNDARY) insectKamikazeFleet[i].y = LOWERBOUNDARY - (ENEMYDIMENSION * INSECTSCALE) / 2;
 		else if (insectKamikazeFleet[i].y - (ENEMYDIMENSION * INSECTSCALE) / 2 < UPPERBOUNDARY) insectKamikazeFleet[i].y = UPPERBOUNDARY + 5;
 
-		if (insectKamikazeFleet[i].ifHit){
+		if (insectKamikazeFleet[i].ifHit) {
 			insectKamikazeFleet[i].framesSinceHit++;
-			if (insectKamikazeFleet[i].framesSinceHit > FRAMESPERFLASH){
+			if (insectKamikazeFleet[i].framesSinceHit > FRAMESPERFLASH) {
 				insectKamikazeFleet[i].framesSinceHit = 0;
 				insectKamikazeFleet[i].ifHit = false;
 			}
@@ -435,8 +621,7 @@ void Game::updateEnemy() {
 				if (arrayOfVectors[i].at(j).x > insectKamikazeFleet[k].x - (ENEMYDIMENSION * INSECTSCALE) / 2 &&
 					arrayOfVectors[i].at(j).x < insectKamikazeFleet[k].x + (ENEMYDIMENSION * INSECTSCALE) / 2 &&
 					arrayOfVectors[i].at(j).y > insectKamikazeFleet[k].y - (ENEMYDIMENSION * INSECTSCALE) / 2 &&
-					arrayOfVectors[i].at(j).y < insectKamikazeFleet[k].y + (ENEMYDIMENSION * INSECTSCALE) / 2)
-				{
+					arrayOfVectors[i].at(j).y < insectKamikazeFleet[k].y + (ENEMYDIMENSION * INSECTSCALE) / 2) {
 					arrayOfVectors[i].erase(arrayOfVectors[i].begin() + j);
 					if (insectKamikazeFleet[k].lives > 1) {
 						insectKamikazeFleet[k].lives--;
@@ -446,20 +631,38 @@ void Game::updateEnemy() {
 					else {
 						createExplosion(explosion(), insectKamikazeFleet[k].x, insectKamikazeFleet[k].y, insectKamikazeFleet[k].rotation, 0.55f, 0, 255, 0);
 						insectKamikazeFleet.erase(insectKamikazeFleet.begin() + k);
+						totalInsectKillsLevel++;
+						totalInsectKillsWave++;
 						break;
 					}
 				}
 			}
 		}
-	}	
+	}
 
-	for (int k = 0; k < insectKamikazeFleet.size(); k++){
-		for (int i = 0; i < missileVector.size(); i++){
+	/*
+
+
+
+
+	Make function that takes in x,y of bullet/weapon and ship, full width and height of both bullet and ship, What type of ship,
+	will make much easier to change other stuff then.
+
+
+
+
+
+
+
+	*/
+
+
+	for (int k = 0; k < insectKamikazeFleet.size(); k++) {
+		for (int i = 0; i < missileVector.size(); i++) {
 			if (missileVector[i].x > insectKamikazeFleet[k].x - (ENEMYDIMENSION * INSECTSCALE) / 2 &&
 				missileVector[i].x < insectKamikazeFleet[k].x + (ENEMYDIMENSION * INSECTSCALE) / 2 &&
 				missileVector[i].y > insectKamikazeFleet[k].y - (ENEMYDIMENSION * INSECTSCALE) / 2 &&
-				missileVector[i].y < insectKamikazeFleet[k].y + (ENEMYDIMENSION * INSECTSCALE) / 2)
-			{		
+				missileVector[i].y < insectKamikazeFleet[k].y + (ENEMYDIMENSION * INSECTSCALE) / 2) {
 				missileVector.erase(missileVector.begin() + i);
 				if (insectKamikazeFleet[k].lives > 1) {
 					insectKamikazeFleet[k].lives = insectKamikazeFleet[k].lives - 35;
@@ -472,24 +675,12 @@ void Game::updateEnemy() {
 						if (lockedOnVector[i] == &insectKamikazeFleet[k]) lockedOnVector.erase(lockedOnVector.begin());
 					}
 					insectKamikazeFleet.erase(insectKamikazeFleet.begin() + k);
+					totalInsectKillsLevel++;
+					totalInsectKillsWave++;
 					break;
 
 				}
 			}
-		}
-	}
-
-	if (insectKamikazeFleet.size() == 0 && enemyShipFleet.size() == 0) {
-		setUpShips();
-		wave++;
-	}
-
-	for (int k = 0; k < explosionVector.size(); k++) {
-		explosionVector.at(k).frameExposure++;
-		if (explosionVector.at(k).frameExposure > EXPLOSIONSPEED) {
-			explosionVector.at(k).frame++;
-			explosionVector.at(k).frameExposure = 0;
-			if (explosionVector.at(k).frame > 12) explosionVector.erase(explosionVector.begin() + k);
 		}
 	}
 }
@@ -730,18 +921,68 @@ void Game::findRotation(int x1, int y1, int x2, int y2, float& rotation) {
 	else if (x2 < x1 && y2 >= y1) rotation = PI - rotation;
 }
 
+//void Game::writeText(Font font, x, y, D3DCOLOR_XRGB)
+
 void Game::ComposeFrame()
 {	
 	spriteobj2->Begin(D3DXSPRITE_ALPHABLEND);
 	drawHealth();
 
+	const int baseY = 900;
+	//quick function that does this char buffer thing. UP ABOVE
 	char buffer[64];
+	sprintf(buffer, "Seconds elapsed: %.2f", secondsSinceStart);
+	gfx.FontPrint(fontGaramond36, 50, baseY, buffer, D3DCOLOR_XRGB(255, 255, 255));
+
+	char buffer2[64];
+	sprintf(buffer2, "Squads defeated: %d/%d", squadsDefeatedWave, squadsPerWave);
+	gfx.FontPrint(fontTimesNewRoman40, 50, baseY - 50, buffer2, D3DCOLOR_XRGB(255, 255, 255));
+
+	char buffer8[64];
+	sprintf(buffer8, "Squads created: %d/%d", squadsCreatedWave, squadsPerWave);
+	gfx.FontPrint(fontTimesNewRoman40, 50, baseY - 100, buffer8, D3DCOLOR_XRGB(255, 255, 255));
+
+	char buffer3[64];
+	sprintf(buffer3, "InsectsNoLevel: %d enemyShipNoLevel: %d",totalInsectCreatedLevel, totalEnemyShipCreatedLevel);
+	gfx.FontPrint(fontTimesNewRoman40, 50, baseY - 150, buffer3, D3DCOLOR_XRGB(255, 255, 255));
+
+	char buffer4[64];
+	sprintf(buffer4, "InsectsNoWave: %d enemyShipNoWave: %d", totalInsectCreatedWave, totalEnemyShipCreatedWave);
+	gfx.FontPrint(fontTimesNewRoman40, 50, baseY - 200, buffer4, D3DCOLOR_XRGB(255, 255, 255));
+
+	char buffer5[64];
+	sprintf(buffer5, "No. Ships Killed Level: %d/%d", totalShipKillsLevel, totalShipCreatedLevel);
+	gfx.FontPrint(fontTimesNewRoman40, 50, baseY - 250, buffer5, D3DCOLOR_XRGB(255, 255, 255));
+
+	char buffer6[64];
+	sprintf(buffer6, "No. Ships Killed Wave: %d/%d", totalShipKillsWave, totalShipCreatedWave);
+	gfx.FontPrint(fontTimesNewRoman40, 50, baseY - 300, buffer6, D3DCOLOR_XRGB(255, 255, 255));
+
+	char buffer7[64];
+	sprintf(buffer7, "Wave Count : %d/%d", wave, wavesPerLevel);
+	gfx.FontPrint(fontTimesNewRoman40, 1600, 800, buffer7, D3DCOLOR_XRGB(255, 255, 255));
+
+	for (int i = 0; i < squadTest.shipArray.size(); i++) {
+		char buffer9[64];
+		sprintf(buffer7, "Address: %d", squadTest.shipArray[i], wavesPerLevel);
+		gfx.FontPrint(fontTimesNewRoman40, 1100, 400 + i*40, buffer7, D3DCOLOR_XRGB(255, 255, 255));
+	}
+
+	for (int i = 0; i < insectKamikazeFleet.size(); i++) {
+		char buffer9[64];
+		sprintf(buffer7, "Address: %d", &insectKamikazeFleet[i], wavesPerLevel);
+		gfx.FontPrint(fontTimesNewRoman40, 1500, 500 + i*40, buffer7, D3DCOLOR_XRGB(255, 255, 255));
+	}
+	
+
+
+	/*char buffer[64];
 	sprintf(buffer, "Insect Count: %d", insectKamikazeFleet.size());
 	gfx.FontPrint(fontGaramond36, 35, 20, buffer, D3DCOLOR_XRGB(255, 255, 255));
 
 	char buffer2[64];
 	sprintf(buffer2, "Enemyship1 Count: %d", enemyShipFleet.size());
-	gfx.FontPrint(fontTimesNewRoman40, 700, 20, buffer2, D3DCOLOR_XRGB(255, 255, 255));
+	gfx.FontPrint(fontTimesNewRoman40, 700, 20, buffer2, D3DCOLOR_XRGB(255, 255, 255));*/
 
 	if (!playerShip.ifHit) gfx.Sprite_Transform_Draw(playerShipTexture, playerShip.x - ((PLAYERDIMENSION * PLAYERSHIPSCALE) / 2), playerShip.y - ((PLAYERDIMENSION * PLAYERSHIPSCALE) / 2), 250, 250, 0, 1, playerShip.rotation, PLAYERSHIPSCALE);
 	else gfx.Sprite_Transform_Draw(playerShipTexture, playerShip.x - (PLAYERDIMENSION * PLAYERSHIPSCALE) / 2, playerShip.y - (PLAYERDIMENSION * PLAYERSHIPSCALE) / 2, 250, 250, 0, 1, playerShip.rotation, PLAYERSHIPSCALE, SHIPFLASHCOLOR);
@@ -798,10 +1039,17 @@ void Game::ComposeFrame()
 TO DO::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 (general order that we should do it in)
 
+- animate text function.
+- collision detection and collision response function. will make it easy to change collision to be better with dot product, bounding box, and distance. 
+- colision response with clever parameters.
+- updateenemyship1sfunction plus updateinsectsfunction
+- abstract some thing that can kill an enemy into a function with variables and inside it evaluateds collision aswell. Bounding box maybe and dot product. Just so when new weapons or new enemys are put in its easy to try add in everything. Makes it only one function to change.
 - missile lock on system. 1 missile to kill most enemy. Missile texture.
+- Update Insects and update enemyship1 function
 - rotation of player isnt super accurate coz of centre. Also bullets aren't going exactly to right place maybe for a different reason.
 - Text saying GameOver and an intro text saying round one wave one level one stage one
 - insects move in bursts.
+- make bounding box collision function. work same as what we have now. so many things collide so very important to have a function. Then for more accurate cases after collision is detected use pixel perfect or distance.
 - Acceleration for both player and enemyships. Takes a while to go full speed. more realistic and can solve other problems in the game. int speed variable instead of constant ahaaaa
 - bullets come out of each side separately.
 - press button to activate shield for certain amount of time and bullets  and time make it go down too
@@ -864,7 +1112,8 @@ WEEKLY LOG / PROGRESS REPORT:
 	WEEK 6: 22nd of October: Explosions with different colours and rotation. Weapon switch on hud. Text into game. Github working.
 	WEEK 6: (same week as last): 26th of October: createExplosion Function. Missile lock on looking good almost there, more specifics to do. Releases. inheritance with all objects.
 
-	WEEK 7: Plan: Make 2 sounds to try(maybe). Top or everywhere orientated. better ai+Better collision avoidance. Enemies come at different times. Gameover and intro text maybe animated intro too.
+	WEEK 7: Over the week: Enemies come at different times, wave+squads+timer+hundreds of helpful variables. Squads. Polymorphism and more inheritance. Make Enemy Function.
+	Gameover and intro text maybe animated intro too. Make 2 sounds to try(maybe). Top or everywhere orientated. better ai+Better collision avoidance.
 		
 //TINY LITTLE SMALL NOTES::::::::::::::::::::::::::::::::::::::::::::::
 */
