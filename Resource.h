@@ -24,3 +24,46 @@
 
 #define IDI_APPICON16                           101
 #define IDI_APPICON32                           103
+
+#define ROTATIONAMOUNT 0.0001f
+#define PI 3.14159265
+
+#define SIZEOFENEMYSHIPFLEET 15
+#define SIZEOFINSECTFLEET 10
+
+//#define PLAYERBULLETSPEED 3.0f
+#define PLAYERBULLETSPEED 8.0f
+#define ENEMYBULLETSPEED 2.3f
+#define PLAYERMSSILESPEED 4.0f
+
+#define BULLETDAMAGE 1
+#define MISSILEDAMAGE 35
+
+#define INSECTSPEED 1.5f
+
+#define PLAYERSHIPLIVES 20
+#define FRAMESPERFLASH 5
+//this or
+//#define SHIPFLASHCOLOR D3DCOLOR_XRGB(255, 200, 200)
+//this?
+#define SHIPFLASHCOLOR D3DCOLOR_XRGB(255, 0, 200)
+
+#define FRAMESPEREXPLOSION 5
+
+#define ENEMYDIMENSION 150
+#define PLAYERDIMENSION 250
+
+#define INSECTSCALE 0.5f
+#define ENEMYSHIPSCALE 0.7f
+//make it 2.0f just to prove the point about constants and how shit hardcoding is
+#define PLAYERSHIPSCALE 0.4f
+
+//keep this scale for player or something like it. Maybe 20 small explosions too
+//#define EXPLOSIONSCALE 20.0f
+#define EXPLOSIONSPEED 4
+#define EXPLOSIONDIMENSION 300
+
+#define LOCKONSCALE 0.6f
+
+#define INITIALLOCKDELAY 30
+#define LOCKINGDELAY 60
